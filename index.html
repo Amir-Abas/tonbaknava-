@@ -1,0 +1,175 @@
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تنبک نوا</title>
+    <style>
+        body {
+    font-family: 'Tahoma', sans-serif;
+    background-color: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.login-container {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    width: 350px;
+    text-align: center;
+}
+
+h2 { color: #333; }
+p { color: #777; font-size: 14px; }
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-sizing: border-box; /* جلوگیری از بیرون زدگی اینپوت */
+    outline: none;
+}
+
+input:focus {
+    border-color: #007bff;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: 0.3s;
+    margin-top: 10px;
+}
+
+#sendDataBtn {
+    background-color: rgb(40, 182, 172);
+    color: white;
+}
+
+#sendDataBtn:hover { background-color: rgb(37, 153, 145); }
+
+#mainLoginBtn {
+    background-color: #007bff;
+    color: white;
+}
+
+#mainLoginBtn:hover { background-color: #0069d9; }
+
+.hidden {
+    display: none;
+}
+
+#statusMsg {
+    margin-top: 15px;
+    font-size: 13px;
+}
+
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <h2>ورود به پنل کاربری</h2>
+        <p>لطفاً اطلاعات خود را وارد کنید</p>
+        
+        <div class="form-group">
+            <input type="text" id="userName" placeholder="نام و نام خانوادگی" required>
+        </div>
+        <div class="form-group">
+            <input type="tel" id="userPhone" placeholder="شماره موبایل" required>
+        </div>
+
+        <!-- دکمه اول: ارسال اطلاعات به بله/تلگرام -->
+        <button id="sendDataBtn" onclick="sendInfo()">تکمیل اطلاعات</button>
+
+        <!-- دکمه دوم: ورود به سایت (در ابتدا مخفی است) -->
+        <button id="mainLoginBtn" class="hidden" onclick="goToMain()">ورود به سایت</button>
+        
+        <p id="statusMsg"></p>
+    </div>
+<script>
+    function login(e) {
+        e.preventDefault();
+        const userInput = document.getElementById("user").value.trim();
+
+        if (!userInput) return;
+
+        // ذخیرهٔ نام/شماره برای دفعات بعد
+        localStorage.setItem("userName", userInput);
+
+        // رفتن به صفحهٔ اصلی
+        window.location.href = "main.html";
+    }
+</script>
+    <script>
+        // تنظیمات ربات بله
+const BOT_TOKEN = '1720873036:4VLyybXT1-0ppeHPYL2qQIPGcHO6SdsDJGw'; 
+const CHAT_ID = '4369347470';     
+
+function sendInfo() {
+    const name = document.getElementById('userName').value;
+    const phone = document.getElementById('userPhone').value;
+    const statusMsg = document.getElementById('statusMsg');
+    const sendBtn = document.getElementById('sendDataBtn');
+
+    // ۱. بررسی پر بودن فیلدها
+    if (name.trim() === "" || phone.trim() === "") {
+        statusMsg.innerText = "لطفاً نام و شماره خود را وارد کنید.";
+        statusMsg.style.color = "#e74c3c";
+        return;
+    }
+
+    // ۲. آماده‌سازی ظاهر سایت برای حالت در حال ارسال
+    statusMsg.innerText = "در حال ثبت اطلاعات و ورود...";
+    statusMsg.style.color = "#3498db";
+    sendBtn.disabled = true; 
+    sendBtn.style.opacity = "0.6";
+
+    // ۳. ساخت متن پیام
+    const message = `🔔 ورود جدید:\n👤 نام: ${name}\n📱 شماره: ${phone}`;
+    const url = `https://tapi.bale.ai/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(message)}`;
+
+    // ۴. ارسال اطلاعات به بله
+    // استفاده از mode: 'no-cors' برای جلوگیری از خطای قرمز رنگ CORS در مرورگر
+    fetch(url, {
+        mode: 'no-cors' 
+    })
+    .then(() => {
+        // این بخش زمانی اجرا می‌شود که درخواست به سمت سرور ارسال شده باشد
+        statusMsg.innerText = "  در حال انتقال به سایت...";
+        statusMsg.style.color = "#27ae60";
+
+        // ۵. انتقال خودکار به صفحه اصلی (معادل دکمه ورود)
+        // یک وقفه ۱.۵ ثانیه‌ای می‌دهیم تا کاربر پیام موفقیت را ببیند
+        setTimeout(() => {
+            window.location.href = "main.html";
+        }, 1500); 
+    })
+    .catch(error => {
+        // اگر اینترنت قطع باشد یا مشکلی در شبکه باشد
+        console.error('Error:', error);
+        statusMsg.innerText = "خطا در اتصال. لطفاً دوباره تلاش کنید.";
+        statusMsg.style.color = "#e74c3c";
+        sendBtn.disabled = false;
+        sendBtn.style.opacity = "1";
+    });
+}
+
+    </script>
+</body>
+</html>
